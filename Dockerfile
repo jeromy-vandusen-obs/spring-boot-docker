@@ -4,23 +4,21 @@ MAINTAINER Jeromy Van Dusen <jeromy.vandusen@gmail.com>
 
 ENV SERVER_PORT=8080
 ENV DEBUG_PORT=8000
-ENV JAR_FILE ${JAR_FILE}
+ENV APP_HOME=/app
 
 VOLUME /tmp
 
-COPY entrypoint.sh /app/entrypoint.sh
+COPY entrypoint.sh $APP_HOME/entrypoint.sh
 
-RUN chmod 755 /app/entrypoint.sh && sh -c 'touch /app/${JAR_FILE}'
+RUN chmod 755 $APP_HOME/entrypoint.sh && sh -c 'touch $APP_HOME/app.jar'
 
-EXPOSE ${SERVER_PORT}
-EXPOSE ${DEBUG_PORT}
+EXPOSE $SERVER_PORT
+EXPOSE $DEBUG_PORT
 
-WORKDIR /app
+WORKDIR $APP_HOME
 
 RUN apk --no-cache add curl
 
-ONBUILD ADD target/${JAR_FILE} /app/app.jar
-
-HEALTHCHECK CMD curl -v --fail http://localhost:${SERVER_PORT}/actuator/health || exit 1
+HEALTHCHECK CMD curl -v --fail http://localhost:$SERVER_PORT/actuator/health || exit 1
 
 ENTRYPOINT ["./entrypoint.sh"]

@@ -23,15 +23,58 @@ To create an image for a Spring Boot application based on this image, your Docke
 
 ```
 FROM jvandusen/spring-boot-docker:latest
-
-ENV JAR_FILE my-app-1.0.0.jar
 ```
 
-Then build your image using the standard Docker command:
+If you want to run the application on a different port than the standard 8080, add an `ENV` entry to the Dockerfile:
 
 ```
-docker build -t my-image-name .
+ENV SERVER_PORT 8761
 ```
+
+Use the `dockerfile-maven-plugin` to build the image. Your plugin should be defined like this:
+
+```
+<plugin>
+    <groupId>com.spotify</groupId>
+    <artifactId>dockerfile-maven-plugin</artifactId>
+    <version>1.4.3</version>
+    <executions>
+        <execution>
+            <id>latest</id>
+            <phase>none</phase>
+            <goals>
+                <goal>build</goal>
+                <goal>tag</goal>
+                <goal>push</goal>
+            </goals>
+            <configuration>
+                <tag>latest</tag>
+            </configuration>
+        </execution>
+        <execution>
+            <id>version</id>
+            <phase>none</phase>
+            <goals>
+                <goal>build</goal>
+                <goal>tag</goal>
+                <goal>push</goal>
+            </goals>
+            <configuration>
+                <tag>${project.version}</tag>
+            </configuration>
+        </execution>
+    </executions>
+    <configuration>
+        <repository>${docker-image.prefix}/${project.artifactId}</repository>
+        <buildArgs>
+            <JAR_FILE>target/${project.build.finalName}.jar</JAR_FILE>
+        </buildArgs>
+    </configuration>
+</plugin>
+```
+
+Be sure to define a `docker-image.prefix` property in your `properties` section. Build it with `mvn dockerfile:build` and push it
+to the registry with `mvn dockerfile:push`.
 
 To launch a container using your new image with all defaults:
 
